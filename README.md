@@ -3,8 +3,24 @@
 
 __This is develop/maintenance tool for StreamAPI__
 
-StreamAPIを使っていると実データのモニターがしづらくいらぬところで躓くことが多い。  
-開発時によく使うコードや操作をパッケージにまとめることで開発効率の向上を目的としています。
+### Target
+
+Stream APIを使ったmodule開発をもっと簡単に。
+
+データがどこを流れている、どう流れているかわかりにくい点、
+そしてデータを流し込んだり、パイプをつなぐ操作が煩雑なので、負荷を軽減をするために作りました。
+
+__Install__
+`npm install handhole`
+
+
+__Use__
+
+```javascript
+var Handhole = require('handhole');
+
+var hh = Handhole(stream);
+```
 
 ### Methods
 
