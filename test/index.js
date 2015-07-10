@@ -1,8 +1,13 @@
 const assert = require('assert');
 const util = require('util');
+const fs = require('fs');
 const through = require('through2');
 const HandHole = require('../index.js');
 const isstream = require('isstream');
+
+
+var srcfile = './README.md';
+var destfile = './copy.md';
 
 describe("handhole", function(){
 	var getDatatype = HandHole.util.getDatatype;
@@ -19,6 +24,21 @@ describe("handhole", function(){
 
 	// get stream list
 	it("list", function(){
+		var hRead = HandHole(fs.createReadStream(srcfile));
+		var hWrite = HandHole(fs.createWriteStream(destfile));
+		hRead.list().forEach(function (d) {
+			assert.equal(getDatatype(d.name), "string")
+			assert.equal(getDatatype(d.id), "number")
+			assert.deepEqual(getDatatype(d.obj), ["stream", 		'readable'])
+			assert.equal(getDatatype(d.next),"array")
+		});
+		hWrite.list().forEach(function (d) {
+			assert.equal(getDatatype(d.name), "string")
+			assert.equal(getDatatype(d.id), "number")
+			assert.deepEqual(getDatatype(d.obj), ["stream", 		'writable'])
+			assert.equal(getDatatype(d.next),"array")
+		});
+
 		var hh = HandHole(makeModel());
 		var list = hh.list().forEach(function (d) {
 			assert.equal(getDatatype(d.name), "string")
@@ -32,6 +52,9 @@ describe("handhole", function(){
 			assert.equal(getDatatype(d.id), "number")
 			assert.equal(getDatatype(d.next),"array")
 		});
+
+		var h2 = HandHole(makeModel_line());
+		// console.log(h2.viewlist())
 	})
 
 	// Get Termination
@@ -361,7 +384,60 @@ function makeModel(){
 	return model;
 }
 
+// test model
+function makeModel_line(){
+	var readstr = fs.createReadStream('./README.md',{encoding:"utf-8"});
+	var writestr = fs.createWriteStream('./copy.md',{encoding:"utf-8"});
+	function t1(chunk,enc,cb){
+		this.push(chunk)
+		cb();
+	}
 
+	function t2(chunk, enc, cb){
+		this.push(chunk)
+		cb();
+	}
+	function f2(cb){
+		cb();
+	}
+
+	function t3(chunk, enc, cb){
+		this.push(chunk)
+		cb();
+	}
+	function f3(cb){
+		// console.log("f3")
+		cb();
+	}
+
+	function t4(chunk, enc, cb){
+		this.push(chunk)
+		cb();
+	}
+	function f4(cb){
+		// console.log("f4")
+		cb();
+	}
+
+	function t5(chunk, enc, cb){
+		this.push(chunk)
+		cb();
+	}
+	function f5(cb){
+		// console.log("f5")
+		cb();
+	}
+	
+
+	readstr
+		.pipe(through.obj(t1))
+		.pipe(through.obj(t2,f2))
+		.pipe(through.obj(t3,f3))
+		.pipe(through.obj(t4,f4))
+		.pipe(through.obj(t5,f5))
+		.pipe(writestr)
+	return readstr;
+}
 
 
 // test class
