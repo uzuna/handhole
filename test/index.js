@@ -99,34 +99,84 @@ describe("handhole", function(){
 		src.forEach(function (d) {
 			assert.equal(d.next.indexOf(1), -1);
 		});
-		assert.deepEqual(t.next, [1])
+		assert.deepEqual(t.next, [1]);
+
+		// 連列してすべてに書き込み　交互にhopperがはいる
+		var h2 = HandHole(makeModel_line());
+		var list = h2.list();
+		list.forEach(function (d) {
+			h2.insert(d.id, h2.hopper());
+		});
+
+		var start = h2.term().start;
+		assert.equal(start.length, 1);
+		var current = start[0].id;
+		var cur_name = start[0].name;
+		var count = 0;
+		var length = h2.list().length;
+
+		assert.equal(cur_name, "hopper");
+		while(current !== false){
+			var obj = h2.getobj(current);
+			current = returnnext(obj);
+			if(current === false) break;
+			var next = h2.getobj(current);
+			if(cur_name !== "hopper"){
+				assert.equal(next.name, "hopper");
+			}else{
+				assert.notEqual(next.name, "hopper");
+			}
+			cur_name = next.name;
+		}
+
+		function returnnext(obj){
+			if(obj.next.length === 1)
+				return obj.next[0]
+			else
+				return false;
+		}
+
 	})
 
 	// remove 
 	it("remove", function(done){
 		this.timeout(5*1000)
-		var hh = HandHole(makeModel());
-		var hp = hh.hopper(0);
-		
-		hh.remove(1);
-		// console.log(hh.viewlist())
-		var fm = hh.flowMater(2);
-		var status = hh.garbageAll(function(result){
-			// console.log(result);
-			// console.log(hh.viewlist())
-			// done();
+		var hh = HandHole(makeModel_line());
+		var list = hh.list();
+		list.forEach(function (d) {
+			hh.insert(d.id, hh.hopper());
 		});
-		
-		fm.on("total", function(data){
-			console.log("total", data);
-			done();
+
+		list = hh.list().filter(function(d){
+			return d.name === "hopper";
 		})
 
-		hp.push("testdata");
-		for(var i = 0; i< 1000; i++){
-			hp.push(i);
-		}
-		hp.push(null);
+		assert.ok(list.length > 1);
+
+		list.forEach(function (d) {
+			hh.remove(d.id);
+		})
+
+		var term = hh.term();
+
+		assert.equal(term.start.length, 1);
+		assert.equal(term.end.length, 1);
+		assert.equal(term.alone.length, 0);
+
+		hh.remove(0);
+		var hp = hh.hopper(1);
+		var fm = hh.flowMater(6);
+
+		fm.on("flow", function(rs){
+			console.log("flow",rs);
+		})
+
+		fm.on("finish", done)
+
+		console.log(hh.viewlist())
+
+		hp.data(["string"]);
+		hp.data(null)
 
 	});
 
