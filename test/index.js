@@ -1,8 +1,13 @@
 const assert = require('assert');
 const util = require('util');
+const fs = require('fs');
 const through = require('through2');
 const HandHole = require('../index.js');
 const isstream = require('isstream');
+
+
+var srcfile = './README.md';
+var destfile = './copy.md';
 
 describe("handhole", function(){
 	var getDatatype = HandHole.util.getDatatype;
@@ -19,6 +24,21 @@ describe("handhole", function(){
 
 	// get stream list
 	it("list", function(){
+		var hRead = HandHole(fs.createReadStream(srcfile));
+		var hWrite = HandHole(fs.createWriteStream(destfile));
+		hRead.list().forEach(function (d) {
+			assert.equal(getDatatype(d.name), "string")
+			assert.equal(getDatatype(d.id), "number")
+			assert.deepEqual(getDatatype(d.obj), ["stream", 		'readable'])
+			assert.equal(getDatatype(d.next),"array")
+		});
+		hWrite.list().forEach(function (d) {
+			assert.equal(getDatatype(d.name), "string")
+			assert.equal(getDatatype(d.id), "number")
+			assert.deepEqual(getDatatype(d.obj), ["stream", 		'writable'])
+			assert.equal(getDatatype(d.next),"array")
+		});
+
 		var hh = HandHole(makeModel());
 		var list = hh.list().forEach(function (d) {
 			assert.equal(getDatatype(d.name), "string")
@@ -32,6 +52,9 @@ describe("handhole", function(){
 			assert.equal(getDatatype(d.id), "number")
 			assert.equal(getDatatype(d.next),"array")
 		});
+
+		var h2 = HandHole(makeModel_line());
+		// console.log(h2.viewlist())
 	})
 
 	// Get Termination
@@ -58,6 +81,7 @@ describe("handhole", function(){
 
 	// Pipe Controll
 	it("insert", function(){
+		// target無しの場合はtopにつける
 		var hh = HandHole(makeModel());
 		assert.throws(function(){
 			hh.insert()
@@ -76,62 +100,121 @@ describe("handhole", function(){
 		src.forEach(function (d) {
 			assert.equal(d.next.indexOf(1), -1);
 		});
-		assert.deepEqual(t.next, [1])
+		assert.deepEqual(t.next, [1]);
+
+		// 連列してすべてに書き込み　交互にhopperがはいる
+		var h2 = HandHole(makeModel_line());
+		var list = h2.list();
+		list.forEach(function (d) {
+			h2.insert(d.id, h2.hopper());
+		});
+
+		var start = h2.term().start;
+		assert.equal(start.length, 1);
+		var current = start[0].id;
+		var cur_name = start[0].name;
+		var count = 0;
+		var length = h2.list().length;
+
+		assert.equal(cur_name, "hopper");
+		while(current !== false){
+			var obj = h2.getobj(current);
+			current = returnnext(obj);
+			if(current === false) break;
+			var next = h2.getobj(current);
+			if(cur_name !== "hopper"){
+				assert.equal(next.name, "hopper");
+			}else{
+				assert.notEqual(next.name, "hopper");
+			}
+			cur_name = next.name;
+		}
+
+		function returnnext(obj){
+			if(obj.next.length === 1)
+				return obj.next[0]
+			else
+				return false;
+		}
+
 	})
 
 	// remove 
 	it("remove", function(done){
 		this.timeout(5*1000)
-		var hh = HandHole(makeModel());
-		var hp = hh.hopper(0);
-		
-		hh.remove(1);
-		// console.log(hh.viewlist())
-		var fm = hh.flowMater(2);
-		var status = hh.garbageAll(function(result){
-			// console.log(result);
-			// console.log(hh.viewlist())
-			// done();
+		var hh = HandHole(makeModel_line());
+		var list = hh.list();
+		list.forEach(function (d) {
+			hh.insert(d.id, hh.hopper());
 		});
-		
-		fm.on("total", function(data){
-			console.log("total", data);
-			done();
+
+		list = hh.list().filter(function(d){
+			return d.name === "hopper";
 		})
 
-		hp.push("testdata");
-		for(var i = 0; i< 1000; i++){
-			hp.push(i);
-		}
-		hp.push(null);
+		assert.ok(list.length > 1);
+
+		list.forEach(function (d) {
+			hh.remove(d.id);
+		})
+
+		var term = hh.term();
+
+		assert.equal(term.start.length, 1);
+		assert.equal(term.end.length, 1);
+		assert.equal(term.alone.length, 0);
+
+		hh.remove(0);
+		var hp = hh.hopper(1);
+		var fm = hh.flowMater(6);
+
+		fm.on("flow", function(rs){
+			console.log("flow",rs);
+		})
+
+		fm.on("finish", done)
+
+		// console.log(hh.viewlist())
+
+		hp.data(["string"]);
+		hp.data(null)
 
 	});
 
 	// pipe 
 	it("pipe", function(done){
-		var hh = HandHole(makeModel());
-		var hp = hh.hopper(0);
-
-		var p = hh.pipe(2, hh.flowMater())
-
-		var status = hh.garbageAll(function(result){
-			console.log(result);
-			console.log(hh.viewlist())
-			done();
+		// liner
+		var hh = HandHole(makeModel_line());
+		assert.throws(function(){
+			hh.pipe()
+		});
+		assert.throws(function(){
+			assert.throws(hh.pipe(1));
+		});
+		assert.throws(function(){
+			assert.throws(hh.pipe(1,{}));
 		});
 
+		assert.throws(function(){
+			assert.throws(hh.pipe(getReadable()));
+		});
 
-		hp.push("testdata");
-		for(var i = 0; i< 1000; i++){
-			hp.push(i);
-		}
-		hp.push(null);
-
+		// Aute pipe
+		var before = hh.viewlist();
+		var hp = hh.pipe(through.obj());
+		// console.log(before,hh.viewlist())
+		assert.deepEqual(before, hh.viewlist());
+		hh.remove(6);
+		var rs = hh.pipe(through.obj());
+		assert.notDeepEqual(before, hh.viewlist());
+		// console.log(rs,hh.viewlist());
+		
+		done();
 	});
 
 
 	// unpipe 
-	it("unpipe", function(done){
+	it.skip("unpipe", function(done){
 		var hh = HandHole(makeModel());
 		var hp = hh.hopper(0);
 		hh.unpipe(1,2);
@@ -157,7 +240,7 @@ describe("handhole", function(){
 
 
 	// split 
-	it("split", function(done){
+	it.skip("split", function(done){
 		var hh = HandHole(makeModel());
 		var hp = hh.hopper(0);
 		var sp = hh.split(1);
@@ -184,7 +267,7 @@ describe("handhole", function(){
 
 
 
-	it("hopper & garbage", function(done){
+	it.skip("hopper & garbage", function(done){
 		var hh = HandHole(makeModel());
 		var status = hh.garbageAll(function(result){
 			assert.deepEqual(result['object', 'Object'])
@@ -206,7 +289,7 @@ describe("handhole", function(){
 		hp.push(null);
 	})
 
-	it("flowmater", function (done) {
+	it.skip("flowmater", function (done) {
 		var hh = HandHole(makeModel());
 		var hp = hh.hopper(0);
 		var status = hh.garbageAll(function(result){
@@ -234,7 +317,7 @@ describe("handhole", function(){
 	})
 
 
-	it("valve", function(done){
+	it.skip("valve", function(done){
 		this.timeout(5*1000)
 		var hh = HandHole(makeModel());
 		var hp = hh.hopper(0);
@@ -264,7 +347,7 @@ describe("handhole", function(){
 		},1500)
 	})
 
-	it("captche", function(done){
+	it.skip("captche", function(done){
 		this.timeout(5*1000)
 		var hh = HandHole(makeModel());
 		var hp = hh.hopper(0);
@@ -361,8 +444,64 @@ function makeModel(){
 	return model;
 }
 
+// test model
+function makeModel_line(){
+	var readstr = fs.createReadStream('./README.md',{encoding:"utf-8"});
+	var writestr = fs.createWriteStream('./copy.md',{encoding:"utf-8"});
+	function t1(chunk,enc,cb){
+		this.push(chunk)
+		cb();
+	}
 
+	function t2(chunk, enc, cb){
+		this.push(chunk)
+		cb();
+	}
+	function f2(cb){
+		cb();
+	}
 
+	function t3(chunk, enc, cb){
+		this.push(chunk)
+		cb();
+	}
+	function f3(cb){
+		// console.log("f3")
+		cb();
+	}
+
+	function t4(chunk, enc, cb){
+		this.push(chunk)
+		cb();
+	}
+	function f4(cb){
+		// console.log("f4")
+		cb();
+	}
+
+	function t5(chunk, enc, cb){
+		this.push(chunk)
+		cb();
+	}
+	function f5(cb){
+		// console.log("f5")
+		cb();
+	}
+	
+
+	readstr
+		.pipe(through.obj(t1))
+		.pipe(through.obj(t2,f2))
+		.pipe(through.obj(t3,f3))
+		.pipe(through.obj(t4,f4))
+		.pipe(through.obj(t5,f5))
+		.pipe(writestr)
+	return readstr;
+}
+
+function getReadable(){
+	return fs.createReadStream('./README.md',{encoding:"utf-8"})
+}
 
 // test class
 function klass(){

@@ -61,3 +61,20 @@ hh.insert(id, nextstream);
 
 
 ...Now writing!!!
+
+
+### Degub
+
+stream.nameをreadable/writableの対応
+
+insert("garbage")の動作
+もしくは終端追加Method
+
+### Need
+
+moduleにinsertではなくpipeを設定できるoptionを
+
+グローバルにmoduleを生成するコードを
+
+### if
+

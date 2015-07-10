@@ -1,6 +1,6 @@
 {
   "name": "handhole",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Utility for StreamAPI",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,7 @@
   ],
   "author": "uzuna",
   "license": "MIT",
-  "bugs": {
+  "bgs": {
     "url": "https://github.com/uzuna/handhole/issues"
   },
   "homepage": "https://github.com/uzuna/handhole",
