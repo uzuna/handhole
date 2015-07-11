@@ -87,10 +87,10 @@ describe("handhole", function(){
 			hh.insert()
 		});
 		assert.throws(function(){
-			assert.throws(hh.insert(1));
+			hh.insert(1)
 		});
 		assert.throws(function(){
-			assert.throws(hh.insert(1,{}));
+			hh.insert(1,{})
 		});
 		
 		var src = hh.list().filter(function (d){
@@ -104,8 +104,15 @@ describe("handhole", function(){
 
 		// 連列してすべてに書き込み　交互にhopperがはいる
 		var h2 = HandHole(makeModel_line());
+
+		assert.throws(function(){
+			h2.insert(0, through.obj());
+		});
+
 		var list = h2.list();
-		list.forEach(function (d) {
+		list.filter(function (d) {
+			return d.type !== "readable";
+		}).forEach(function (d) {
 			h2.insert(d.id, h2.hopper());
 		});
 
@@ -116,7 +123,6 @@ describe("handhole", function(){
 		var count = 0;
 		var length = h2.list().length;
 
-		assert.equal(cur_name, "hopper");
 		while(current !== false){
 			var obj = h2.getobj(current);
 			current = returnnext(obj);
@@ -144,7 +150,10 @@ describe("handhole", function(){
 		this.timeout(5*1000)
 		var hh = HandHole(makeModel_line());
 		var list = hh.list();
-		list.forEach(function (d) {
+
+		list.filter(function (d) {
+			return d.type !== "readable";
+		}).forEach(function (d) {
 			hh.insert(d.id, hh.hopper());
 		});
 
@@ -189,24 +198,28 @@ describe("handhole", function(){
 			hh.pipe()
 		});
 		assert.throws(function(){
-			assert.throws(hh.pipe(1));
+			h.pipe(1);
 		});
 		assert.throws(function(){
-			assert.throws(hh.pipe(1,{}));
+			hh.pipe(1,{});
 		});
-
 		assert.throws(function(){
-			assert.throws(hh.pipe(getReadable()));
+			hh.pipe(getReadable());
 		});
+		assert.throws(function(){
+			var end = hh.term().end[0];
+			hh.pipe(end, getReadable());
+		});
+		
 
-		// Aute pipe
+		// Aute pipe readableの終端にのみ反応
 		var before = hh.viewlist();
 		var hp = hh.pipe(through.obj());
-		// console.log(before,hh.viewlist())
-		assert.deepEqual(before, hh.viewlist());
+		assert.deepEqual(before, hh.viewlist());	// not add
+
 		hh.remove(6);
 		var rs = hh.pipe(through.obj());
-		assert.notDeepEqual(before, hh.viewlist());
+		assert.notDeepEqual(before, hh.viewlist()); // adding
 		// console.log(rs,hh.viewlist());
 		
 		done();
