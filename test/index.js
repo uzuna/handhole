@@ -81,15 +81,16 @@ describe("handhole", function(){
 
 	// Pipe Controll
 	it("insert", function(){
+		// target無しの場合はtopにつける
 		var hh = HandHole(makeModel());
 		assert.throws(function(){
 			hh.insert()
 		});
 		assert.throws(function(){
-			assert.throws(hh.insert(1));
+			hh.insert(1)
 		});
 		assert.throws(function(){
-			assert.throws(hh.insert(1,{}));
+			hh.insert(1,{})
 		});
 		
 		var src = hh.list().filter(function (d){
@@ -103,8 +104,15 @@ describe("handhole", function(){
 
 		// 連列してすべてに書き込み　交互にhopperがはいる
 		var h2 = HandHole(makeModel_line());
+
+		assert.throws(function(){
+			h2.insert(0, through.obj());
+		});
+
 		var list = h2.list();
-		list.forEach(function (d) {
+		list.filter(function (d) {
+			return d.type !== "readable";
+		}).forEach(function (d) {
 			h2.insert(d.id, h2.hopper());
 		});
 
@@ -115,7 +123,7 @@ describe("handhole", function(){
 		var count = 0;
 		var length = h2.list().length;
 
-		assert.equal(cur_name, "hopper");
+
 		while(current !== false){
 			var obj = h2.getobj(current);
 			current = returnnext(obj);
@@ -143,7 +151,9 @@ describe("handhole", function(){
 		this.timeout(5*1000)
 		var hh = HandHole(makeModel_line());
 		var list = hh.list();
-		list.forEach(function (d) {
+		list.filter(function (d) {
+			return d.type !== "readable";
+		}).forEach(function (d) {
 			hh.insert(d.id, hh.hopper());
 		});
 
@@ -173,7 +183,7 @@ describe("handhole", function(){
 
 		fm.on("finish", done)
 
-		console.log(hh.viewlist())
+		// console.log(hh.viewlist())
 
 		hp.data(["string"]);
 		hp.data(null)
@@ -182,29 +192,42 @@ describe("handhole", function(){
 
 	// pipe 
 	it("pipe", function(done){
-		var hh = HandHole(makeModel());
-		var hp = hh.hopper(0);
-
-		var p = hh.pipe(2, hh.flowMater())
-
-		var status = hh.garbageAll(function(result){
-			console.log(result);
-			console.log(hh.viewlist())
-			done();
+		// liner
+		var hh = HandHole(makeModel_line());
+		assert.throws(function(){
+			hh.pipe()
 		});
+		assert.throws(function(){
+			h.pipe(1);
+		});
+		assert.throws(function(){
+			hh.pipe(1,{});
+		});
+		assert.throws(function(){
+			hh.pipe(getReadable());
+		});
+		assert.throws(function(){
+			var end = hh.term().end[0];
+			hh.pipe(end, getReadable());
+		});
+		
 
+		// Aute pipe readableの終端にのみ反応
+		var before = hh.viewlist();
+		var hp = hh.pipe(through.obj());
+		assert.deepEqual(before, hh.viewlist());	// not add
 
-		hp.push("testdata");
-		for(var i = 0; i< 1000; i++){
-			hp.push(i);
-		}
-		hp.push(null);
-
+		hh.remove(6);
+		var rs = hh.pipe(through.obj());
+		assert.notDeepEqual(before, hh.viewlist()); // adding
+		// console.log(rs,hh.viewlist());
+		
+		done();
 	});
 
 
 	// unpipe 
-	it("unpipe", function(done){
+	it.skip("unpipe", function(done){
 		var hh = HandHole(makeModel());
 		var hp = hh.hopper(0);
 		hh.unpipe(1,2);
@@ -230,7 +253,7 @@ describe("handhole", function(){
 
 
 	// split 
-	it("split", function(done){
+	it.skip("split", function(done){
 		var hh = HandHole(makeModel());
 		var hp = hh.hopper(0);
 		var sp = hh.split(1);
@@ -257,7 +280,7 @@ describe("handhole", function(){
 
 
 
-	it("hopper & garbage", function(done){
+	it.skip("hopper & garbage", function(done){
 		var hh = HandHole(makeModel());
 		var status = hh.garbageAll(function(result){
 			assert.deepEqual(result['object', 'Object'])
@@ -279,7 +302,7 @@ describe("handhole", function(){
 		hp.push(null);
 	})
 
-	it("flowmater", function (done) {
+	it.skip("flowmater", function (done) {
 		var hh = HandHole(makeModel());
 		var hp = hh.hopper(0);
 		var status = hh.garbageAll(function(result){
@@ -307,7 +330,7 @@ describe("handhole", function(){
 	})
 
 
-	it("valve", function(done){
+	it.skip("valve", function(done){
 		this.timeout(5*1000)
 		var hh = HandHole(makeModel());
 		var hp = hh.hopper(0);
@@ -337,7 +360,7 @@ describe("handhole", function(){
 		},1500)
 	})
 
-	it("captche", function(done){
+	it.skip("captche", function(done){
 		this.timeout(5*1000)
 		var hh = HandHole(makeModel());
 		var hp = hh.hopper(0);
@@ -478,7 +501,6 @@ function makeModel_line(){
 		cb();
 	}
 	
-
 	readstr
 		.pipe(through.obj(t1))
 		.pipe(through.obj(t2,f2))
@@ -489,6 +511,9 @@ function makeModel_line(){
 	return readstr;
 }
 
+function getReadable(){
+	return fs.createReadStream('./README.md',{encoding:"utf-8"})
+}
 
 // test class
 function klass(){

@@ -52,12 +52,149 @@ var hh = Handhole(stream);
 |garbage|`hh.garbage(target, [done])`|targetの後ろにデータが流れないようにする。|
 |garbageAll|`hh.garbageAll(target, [done])`|すべての終端にgarbegeをつける。すべてがfinishされたらcbする|
 
-### Method Detail
+## Method Detail
+
+### Insert
+
+__targetの前に__streamを追加する
+
+`hh.insert([target], stream)`
+
+```javascript
+var t = stream;			// A-B-Cという順番でつながっていると仮定
+var hh = HandHole(t);
+
+// 指定なしなら先頭に追加
+hh.insert(D);				// D-A-B-C
+
+// 指定をすれば前のStreamとの間に追加
+hh.insert("B",E)		// D-A-E-B-C
+
+// readableの前には入れられない
+var r = fs.createReadStream(filepath);
+var hh = HandHole(r);
+hh.insert(0, F);	// Error!!!
+```
+
+### Pipe
+
+__targetの後ろに__streamを追加する
+
+`hh.pipe([target], stream)`
+
+```javascript
+var t = stream;			// A-B-Cという順番でつながっていると仮定
+var hh = HandHole(t);
+
+// 指定なしなら最後尾に追加
+hh.pipe(D);				// A-B-C-D
+
+// 指定をすれば並列に接続
+hh.pipe("B",E)		// A-B-C-D
+									//   |-E
+
+// writableの後には入れられない
+var r = fs.createWriteStream(filepath);
+var hh = HandHole(r);
+hh.insert("D", F);	// Error!!!
 
 ```
-var hh = HandHole(stream);
-hh.insert(id, nextstream);
+
+
+### Remove
+
+__target__を取り除く
+
+`hh.pipe([target])`
+
+```javascript
+var t = stream;			// A-B-C-D-Eという順番でつながっていると仮定
+var hh = HandHole(t);
+
+// 指定したstreamを取り除いて前後とつなげる
+hh.remove("D");				// A-B-C-E
+
+```
+
+### unpipe
+### split
+
+## Support Streams
+
+### Hopper
+
+データを個別に導入するためのStream
+
+```javascript
+var Handhole = require('handohole');
+
+//　生成方法は二つ srreamobjを受け取るか
+var hp = Handhole.hopper();
+
+// 直接追加する
+var hh = handhole(stream);
+var hp = hh.hopper(1);	// insertと同じ動作を行う
+
+
+// データはpushもしくはdataで追加できる。
+hp.push("A");
+hp.push("B");
+hp.push("C");
+hp.push("D");
+
+hp.data(["A","B","C","D"]);	// data Methodなら配列で渡すこともできる
+
+// close
+hp.push(null);
+hp.data(null);
+
+```
+
+### Garbage / garbageAll()
+
+閉じていないStreamを動作させるための終端Stream。  
+終了時にはcallbackを呼ぶ。  
+基本的にはgarbageAllで勝手にDuplexの終端を閉じるのでそちらを使う
+
+```javascript
+var Handhole = require('handohole');
+
+//　生成方法は二つ srreamobjを受け取るか
+var hp = Handhole.hopper();
+
+// 直接追加する
+var hh =　handhole(stream); // A-B-C-D
+
+// Callbackを指定 A-B-C-D-[garbage]
+hh.garbageAll(function(){
+	// call by streamD.onfinish
+	done();
+});
+
+hh.data(data);
+hh.data(null);
+
 ```
 
 
-...Now writing!!!
+### FlowMater
+### Capture
+
+### ...Now writing!!!
+
+
+### Degub
+
+stream.nameをreadable/writableの対応
+
+insert("garbage")の動作
+もしくは終端追加Method
+
+### Need
+
+moduleにinsertではなくpipeを設定できるoptionを
+
+グローバルにmoduleを生成するコードを
+
+### if
+
