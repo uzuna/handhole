@@ -281,21 +281,15 @@ vl.on("flow", function (flow){
 
 ### Capture
 
-### ...Now writing!!!
+It is `console.log(data)`
 
+```javascript
 
-### Degub
+// get Object from class
+var cp = Handhole.capture(option)
 
-stream.nameをreadable/writableの対応
+// or insert to instance
+var hh = handhole(stream); 
+var cp = hh.capture("B");	// insert
 
-insert("garbage")の動作
-もしくは終端追加Method
-
-### Need
-
-moduleにinsertではなくpipeを設定できるoptionを
-
-グローバルにmoduleを生成するコードを
-
-### if
-
+```

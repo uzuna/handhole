@@ -2,3 +2,4 @@
 copy.md
 makefile
 *.sublime*
+*.log

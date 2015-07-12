@@ -411,13 +411,13 @@ describe("handhole", function(){
 		},1500)
 	})
 
-	it.skip("captche", function(done){
+	it("capture", function(done){
 		this.timeout(5*1000)
 		var hh = HandHole(makeModel());
 		var hp = hh.hopper(0);
 		var status = hh.garbageAll(function(result){
-			console.log(result);
-			console.log(hh.viewlist())
+			// console.log(result);
+			// console.log(hh.viewlist())
 			done();
 		});
 
@@ -428,10 +428,7 @@ describe("handhole", function(){
 			hp.push(i);
 		}
 		hp.push(null);
-
 	})
-
-	
 });
 
 function logprog(str){
