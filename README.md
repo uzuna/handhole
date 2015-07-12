@@ -28,8 +28,8 @@ var hh = Handhole(stream);
 
 |method|exsample|descript|
 |:---|:---|:---|
-|insert|`hh.insert(target, stream)`|指定したstreamの前に追加する。すでにつながっているものがあれば間に挿入する|
-|remove|`hh.remove(target)`|指定したstreamを取り除く。前後のstreamは接続される|
+|insert|`hh.insert(target, stream)`|指定したstreamの前に追加する|
+|remove|`hh.remove(target)`|指定したstreamを取り除く|
 |pipe|`hh.pipe(target, stream)`|指定したstreamの後ろに追加|
 |unpipe|`hh.unpipe(target)`|指定したstreamの後ろを切り離す|
 |split|`hh.sprit(to,[from])`|指定したstreamから切り離す|
@@ -38,9 +38,9 @@ var hh = Handhole(stream);
 
 |method|exsample|descript|
 |:---|:---|:---|
-|hopper|`hh.hopper([target])`|データを流し込み口を作る。指定があればtargetの前に追加する。|
+|hopper|`hh.hopper([target])`|データを流し込み口を作る。指定があればtargetの前に追加する|
 |flowMater|`hh.flowMater([target])`|データ量(count,size)を計測する。終了時に他totalを返す|
-|valve|`hh.valve([DPS],[target])`|DPS(data/sec)を調整する。0で停止。マイナス値で制限なし。|
+|valve|`hh.valve([DPS],[target])`|DPS(data/sec)を調整する(0=stop, 0 > no limit)|
 
 #### Module for Dev
 
@@ -49,8 +49,8 @@ var hh = Handhole(stream);
 
 |method|exsample|descript|
 |:---|:---|:---|
-|garbage|`hh.garbage(target, [done])`|targetの後ろにデータが流れないようにする。|
-|garbageAll|`hh.garbageAll(target, [done])`|すべての終端にgarbegeをつける。すべてがfinishされたらcbする|
+|garbage|`hh.garbage(target, [done])`|trash chunk data|
+|garbageAll|`hh.garbageAll(target, [done])`|set garbage to all EndTerm|
 
 ## Method Detail
 
@@ -117,6 +117,19 @@ hh.remove("D");				// A-B-C-E
 ```
 
 ### unpipe
+
+targetの下流を切り離す。
+
+```javascript
+var t = stream;     // A-B-C-D-Eという順番でつながっていると仮定
+var hh = HandHole(t);
+
+// 指定したstreamを取り除いて前後とつなげる
+hh.unpipe("C");       // A-B-C と　D-Eができる
+
+```
+
+
 ### split
 
 ## Support Streams

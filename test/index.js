@@ -12,14 +12,14 @@ var destfile = './copy.md';
 describe("handhole", function(){
 	var getDatatype = HandHole.util.getDatatype;
 	it("data type", function(){
-		assert.equal(getDatatype(new Buffer(1)), 	'buffer')
-		assert.equal(getDatatype(1), 							'number')
-		assert.equal(getDatatype("1"), 						'string')
-		assert.equal(getDatatype(["1"]), 					'array')
-		assert.deepEqual(getDatatype({aaa:1}), 						['object', 		'Object'])
-		assert.deepEqual(getDatatype(function test(){}), 	["function", 	'test'])
-		assert.deepEqual(getDatatype(new klass()),				["object", 		'klass'])
-		assert.deepEqual(getDatatype(through()),					["stream", 		'duplex'])
+		assert.equal(getDatatype(new Buffer(1)),  'buffer')
+		assert.equal(getDatatype(1),              'number')
+		assert.equal(getDatatype("1"),            'string')
+		assert.equal(getDatatype(["1"]),          'array')
+		assert.deepEqual(getDatatype({aaa:1}), 						['object',    'Object'])
+		assert.deepEqual(getDatatype(function test(){}), 	["function",  'test'])
+		assert.deepEqual(getDatatype(new klass()),				["object",    'klass'])
+		assert.deepEqual(getDatatype(through()),					["stream",    'duplex'])
 	});
 
 	// get stream list
@@ -29,13 +29,13 @@ describe("handhole", function(){
 		hRead.list().forEach(function (d) {
 			assert.equal(getDatatype(d.name), "string")
 			assert.equal(getDatatype(d.id), "number")
-			assert.deepEqual(getDatatype(d.obj), ["stream", 		'readable'])
+			assert.deepEqual(getDatatype(d.obj), ["stream", 'readable'])
 			assert.equal(getDatatype(d.next),"array")
 		});
 		hWrite.list().forEach(function (d) {
 			assert.equal(getDatatype(d.name), "string")
 			assert.equal(getDatatype(d.id), "number")
-			assert.deepEqual(getDatatype(d.obj), ["stream", 		'writable'])
+			assert.deepEqual(getDatatype(d.obj), ["stream", 'writable'])
 			assert.equal(getDatatype(d.next),"array")
 		});
 
@@ -43,7 +43,7 @@ describe("handhole", function(){
 		var list = hh.list().forEach(function (d) {
 			assert.equal(getDatatype(d.name), "string")
 			assert.equal(getDatatype(d.id), "number")
-			assert.deepEqual(getDatatype(d.obj), ["stream", 		'duplex'])
+			assert.deepEqual(getDatatype(d.obj), ["stream", 'duplex'])
 			assert.equal(getDatatype(d.next),"array")
 		});
 
@@ -81,18 +81,28 @@ describe("handhole", function(){
 
 	// Pipe Controll
 	it("insert", function(){
-		// target無しの場合はtopにつける
+		
 		var hh = HandHole(makeModel());
+
+		// error noparameter
 		assert.throws(function(){
 			hh.insert()
 		});
+
+		// error not stream
 		assert.throws(function(){
 			hh.insert(1)
 		});
 		assert.throws(function(){
 			hh.insert(1,{})
 		});
+
+		// error writable stream
+		assert.throws(function(){
+			hh.insert(1, getWritable())
+		});
 		
+		// test before after pipe state
 		var src = hh.list().filter(function (d){
 			return d.next.indexOf(1) > -1;
 		})
@@ -102,9 +112,12 @@ describe("handhole", function(){
 		});
 		assert.deepEqual(t.next, [1]);
 
-		// 連列してすべてに書き込み　交互にhopperがはいる
+
+		// 連列してすべてに書き込み　交互にhopperがはいるのを確認
 		var h2 = HandHole(makeModel_line());
 
+		// 0 はreadableなのでerrorが発生することを確認
+		assert.equal(h2.getobj(0).type,"readable")
 		assert.throws(function(){
 			h2.insert(0, through.obj());
 		});
@@ -227,18 +240,30 @@ describe("handhole", function(){
 
 
 	// unpipe 
-	it.skip("unpipe", function(done){
+	it("unpipe", function(done){
 		var hh = HandHole(makeModel());
 		var hp = hh.hopper(0);
+
+		// single
+		assert.equal(hh.term().alone.length, 0);
 		hh.unpipe(1,2);
-		console.log(hh.viewlist())
+		var alone = hh.term().alone;
+		assert.equal(alone.length, 1);
+		assert.equal(alone[0].id, 2);
 		
 		var status = hh.garbageAll(function(result){
-			console.log(result);
-			console.log(hh.viewlist())
+			// console.log(result);
+			// console.log(hh.viewlist())
 			done();
 		});
 
+		// line
+		assert.equal(hh.term().start.length, 1);
+		hh.unpipe(0, 1);
+		var start = hh.term().start;
+		assert.equal(start.length, 2);
+		var hp3 = hh.hopper(1);
+		
 
 		hp.push("testdata");
 		for(var i = 0; i< 1000; i++){
@@ -248,6 +273,8 @@ describe("handhole", function(){
 
 		var hp2 = hh.hopper(2);
 		hp2.push(null);
+
+		hp3.push(null)
 
 	});
 
@@ -513,6 +540,9 @@ function makeModel_line(){
 
 function getReadable(){
 	return fs.createReadStream('./README.md',{encoding:"utf-8"})
+}
+function getWritable(){
+	return fs.createWriteStream('./copy.md',{encoding:"utf-8"})
 }
 
 // test class
