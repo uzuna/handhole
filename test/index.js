@@ -191,7 +191,8 @@ describe("handhole", function(){
 		var fm = hh.flowMater(6);
 
 		fm.on("flow", function(rs){
-			console.log("flow",rs);
+			// console.log("flow",rs);
+			assert.equal(rs.count, 1)
 		})
 
 		fm.on("finish", done)
@@ -325,9 +326,7 @@ describe("handhole", function(){
 		hp.obj.push(null);
 	});
 
-
-
-	it.skip("hopper & garbage", function(done){
+	it("hopper & garbage", function(done){
 		var hh = HandHole(makeModel());
 		var status = hh.garbageAll(function(result){
 			assert.deepEqual(result['object', 'Object'])
@@ -349,20 +348,20 @@ describe("handhole", function(){
 		hp.push(null);
 	})
 
-	it.skip("flowmater", function (done) {
+	it("flowmater", function (done) {
 		var hh = HandHole(makeModel());
 		var hp = hh.hopper(0);
-		var status = hh.garbageAll(function(result){
-			console.log(result);
-			done();
-		});
+		var status = hh.garbageAll();
 
 		var fm = hh.flowMater(1);
 		fm.on("flow", function(data){
-			console.log("flow",data);
+			// console.log("flow",data);
+			assert.deepEqual(Object.keys(data),["count","size"]);
 		})
 		fm.on("total", function(data){
-			console.log("total",data);
+			// console.log("total",data);
+			assert.deepEqual(Object.keys(data),["count","size"]);
+			done();
 		})
 
 		hp.push("testdata");
@@ -372,25 +371,30 @@ describe("handhole", function(){
 
 		setTimeout(function(){
 			hp.push(null);
-		},1500)
+		},1100)
 		
 	})
 
 
-	it.skip("valve", function(done){
+	it("valve", function(done){
 		this.timeout(5*1000)
 		var hh = HandHole(makeModel());
 		var hp = hh.hopper(0);
 		var status = hh.garbageAll(function(result){
-			console.log(result);
-			console.log(hh.viewlist())
+			// console.log(result);
+			// console.log(hh.viewlist())
 			done();
 		});
 
-		var fm = hh.valve(1,5);
+		var vl = hh.valve(1,5);
 
-		fm.on("flow", function(data){
-			console.log("flow",data);
+		vl.on("flow", function(data){
+			// console.log("valve",data);
+			assert.equal(getDatatype(data.timer),"number")
+			assert.equal(getDatatype(data.rate),"number")
+			assert.equal(getDatatype(data.wait),"number")
+			assert.equal(getDatatype(data.interval),"number")
+			assert.equal(getDatatype(data.count),"number")
 		})
 
 		hp.push("testdata");
@@ -400,10 +404,10 @@ describe("handhole", function(){
 		hp.push(null);
 
 		setTimeout(function(){
-			fm.valve(0);
+			vl.valve(0);
 		},1000)
 		setTimeout(function(){
-			fm.valve(-1);
+			vl.valve(-1);
 		},1500)
 	})
 

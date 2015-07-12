@@ -194,7 +194,7 @@ var Handhole = require('handohole');
 var hp = Handhole.hopper();
 
 // 直接追加する
-var hh =　handhole(stream); // A-B-C-D
+var hh = handhole(stream); // A-B-C-D
 
 // Callbackを指定 A-B-C-D-[garbage]
 hh.garbageAll(function(){
@@ -207,8 +207,78 @@ hh.data(null);
 
 ```
 
-
 ### FlowMater
+
+Monitoring data flow call count and chunk size.
+
+#### event
+
+##### data
+emiting on timer(default:500ms)
+return info latest dataflow.
+
+##### total
+emitting on finish.
+return info total dataflow.
+
+`handhole.flowMater([option])`
+
+```javascript
+
+// get Object from class
+var fm = Handhole.flowMeter(option)
+
+// or insert to instance
+var hh = handhole(stream); 
+var fm = hh.flowMater("B");	// insert
+
+// option
+option  = {
+	timer:1000 // interval of emit flow event
+}
+
+// result
+fm.on("flow", function (flow){
+	console.log(flow.count); 	// count of call in interval
+	console.log(flow.size); 	// size of total datasize in interval
+})
+
+```
+
+### Valve
+
+valve is regurate data count per second.
+
+`Handhole.valve([option])`
+
+```javascript
+
+// get Object from class
+var vl = Handhole.valve(option)
+
+// or insert to instance
+var hh = handhole(stream); 
+var vl = hh.valve("B");	// insert
+
+// option
+option  = {
+	valve:1000 // iDPS target
+}
+
+// change valve
+vl.valve(50);
+
+// result
+vl.on("flow", function (flow){
+	console.log(flow.count); 	// count of call in interval
+	console.log(flow.size); 	// size of total datasize in interval
+	console.log(flow.timer); 	// start datetime of controll span
+	console.log(flow.wait); 	// buffering chunk count
+	console.log(flow.valve); 	// now valve setting
+})
+
+```
+
 ### Capture
 
 ### ...Now writing!!!
