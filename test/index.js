@@ -280,29 +280,49 @@ describe("handhole", function(){
 
 
 	// split 
-	it.skip("split", function(done){
+	it("split", function(done){
+
+		// split
 		var hh = HandHole(makeModel());
 		var hp = hh.hopper(0);
+
+		assert.equal(hh.term().start.length, 1);
 		var sp = hh.split(1);
-		console.log(hh.viewlist())
-		var status = hh.garbageAll(function(result){
-			console.log(result);
-			console.log(hh.viewlist())
+		assert.equal(hh.term().start.length, 2);
+		var list = hh.term().start.reduce(function (a, b) {
+			a.push(b.id);
+			return a;
+		},[]);
+		assert(list.indexOf(1) > -1);
+
+		var h2 = HandHole(makeModel_line());
+
+		var split = h2.split(1,5);
+		// console.log(h2.viewlist());
+		start = h2.term().start.reduce(function (a, b){
+			a.push(b.id);
+			return a;
+		},[]);
+
+		assert.equal(start.length, 2);
+		assert(start.indexOf(0) > -1);
+		assert(start.indexOf(1) > -1);
+
+		var end = h2.term().end.reduce(function (a, b){
+			a.push(b.id);
+			return a;
+		},[]);
+
+		assert.equal(end.length, 2);
+		assert(end.indexOf(6) > -1);
+		assert(end.indexOf(5) > -1);
+
+		h2.garbageAll(function(){
 			done();
-		});
+		})
 
-		// pipeの端を取得する
-		// console.log(hh.term())
-
-		hp.push("testdata");
-		for(var i = 0; i< 1000; i++){
-			hp.push(i);
-		}
-		hp.push(null);
-
-		var hp2 = hh.hopper(1);
-		hp2.push(null);
-
+		var hp = h2.insert(h2.hopper());
+		hp.obj.push(null);
 	});
 
 

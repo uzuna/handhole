@@ -116,9 +116,11 @@ hh.remove("D");				// A-B-C-E
 
 ```
 
-### unpipe
+### Unpipe
 
 targetの下流を切り離す。
+
+`hh.unpipe(target)`
 
 ```javascript
 var t = stream;     // A-B-C-D-Eという順番でつながっていると仮定
@@ -130,7 +132,23 @@ hh.unpipe("C");       // A-B-C と　D-Eができる
 ```
 
 
-### split
+### Split
+
+split stream pipe in front of "to".  
+
+`hh.unpipe(to, [from])`
+
+```javascript
+var t = stream;     // ex. it is piped A-B-C-D-E
+var hh = HandHole(t);
+
+// split in front of target
+hh.split("C");       // A-B と C-D-Eができる
+
+// get between "to" and "from"
+hh.split("B","D");
+
+```
 
 ## Support Streams
 
