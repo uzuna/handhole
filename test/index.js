@@ -1,9 +1,10 @@
-const assert = require('assert');
-const util = require('util');
-const fs = require('fs');
-const through = require('through2');
-const HandHole = require('../index.js');
-const isstream = require('isstream');
+'use strict';
+var assert = require('assert');
+var util = require('util');
+var fs = require('fs');
+var through = require('through2');
+var HandHole = require('../index.js');
+var isstream = require('isstream');
 
 
 var srcfile = './README.md';
@@ -309,7 +310,7 @@ describe("handhole", function(){
 
 			var split = h2.split(1,5);
 			// console.log(h2.viewlist());
-			start = h2.term().start.reduce(function (a, b){
+			var start = h2.term().start.reduce(function (a, b){
 				a.push(b.id);
 				return a;
 			},[]);
@@ -482,7 +483,15 @@ describe("handhole", function(){
 			done();
 		})
 
-		it("insert Array")
+		it("insert Array", function (done) {
+			var hh = HandHole(getWritable());
+			var rs = hh.add(makeModel_line());
+
+			hh.insert(hh.hopper());
+
+			console.log(hh.viewlist());
+			done();
+		})
 
 		it("loop check term")
 	});
@@ -499,15 +508,13 @@ function makeModel(){
 	// t1 -- t2 -tend
 	//		|- t3 - t4 -t5
 	//		|- noname
-	function t1(chunk,enc,cb){
-		chunk.t1 = "t1";
+	function t1(chunk, enc, cb){
 		this.push(chunk)
 		cb();
 	}
 	var model = through.obj(t1)
 
 	function t2(chunk, enc, cb){
-		chunk.t2 = "t2"
 		this.push(chunk)
 		cb();
 	}
@@ -516,7 +523,6 @@ function makeModel(){
 	}
 
 	function t3(chunk, enc, cb){
-		chunk.t3 = "t3"
 		this.push(chunk)
 		cb();
 	}
@@ -526,7 +532,6 @@ function makeModel(){
 	}
 
 	function t4(chunk, enc, cb){
-		chunk.t4 = "t4"
 		this.push(chunk)
 		cb();
 	}
@@ -536,7 +541,6 @@ function makeModel(){
 	}
 
 	function t5(chunk, enc, cb){
-		chunk.t5 = "t5"
 		this.push(chunk)
 		cb();
 	}
