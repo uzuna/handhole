@@ -433,6 +433,8 @@ describe("handhole", function(){
 
 			var cp = hh.capture(2);
 
+			var c2 = HandHole.capture();
+
 			hp.push("testdata");
 			for(var i = 0; i< 10; i++){
 				hp.push(i);
