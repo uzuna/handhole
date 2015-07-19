@@ -389,17 +389,19 @@ describe("handhole", function(){
 		it("valve", function(done){
 			this.timeout(5*1000)
 			var hh = HandHole(makeModel());
+			// console.log(hh.viewlist())
 			var hp = hh.hopper(0);
 			var status = hh.garbageAll(function(result){
 				// console.log(result);
 				// console.log(hh.viewlist())
 				done();
 			});
+			// console.log(hh.viewlist())
 
 			var vl = hh.valve(1,5);
 
 			vl.on("flow", function(data){
-				// console.log("valve",data);
+				console.log("valve",data.count);
 				assert.equal(getDatatype(data.timer),"number")
 				assert.equal(getDatatype(data.rate),"number")
 				assert.equal(getDatatype(data.wait),"number")
@@ -489,13 +491,58 @@ describe("handhole", function(){
 			var hh = HandHole(getWritable());
 			var rs = hh.add(makeModel_line());
 
-			hh.insert(hh.hopper());
+			var v1 = hh.viewlist();
+			var t1 = hh.term();
+			assert.equal(t1.start.length,1)
+			assert.equal(t1.end.length,1)
+			assert.equal(t1.alone.length,1)
 
-			console.log(hh.viewlist());
+			var addArray = [through.obj(),hh.flowMater()];
+			var ir = hh.insert(addArray);
+
+			// Check total count
+			assert.equal(hh.viewlist().length, v1.length+addArray.length);
+
+			// Check pipe Connection
+			var rn = hh.getRouteNode(ir.id);
+			assert.equal(rn.length,3)
+
+
+			// console.log(hh.viewlist());
+			// console.log(hh.getRouteNode(8));
 			done();
 		})
 
-		it("loop check term")
+		it("loop check term", function (done){
+
+			// makeloop
+			var addArray = [through.obj(),HandHole.flowMater()];
+			var hh = HandHole(addArray);
+			hh.add(makeModel_line());
+			hh.add(getPassthrogh());
+
+			var t1 = hh.term();
+			assert.equal(t1.start.length,2)
+			assert.equal(t1.end.length,2)
+			assert.equal(t1.alone.length,1)
+
+			// looop 2 stream
+			hh.pipe(1,0)
+			
+			var pth = t1.alone[0];
+			hh.pipe(pth.id,pth.id)
+			
+			var t2 = hh.term();
+			assert.equal(t2.start.length,1)
+			assert.equal(t2.end.length,1)
+			assert.equal(t2.alone.length,0)
+			assert.equal(t2.loop.length,3)
+
+			// console.log(hh.viewlist())
+			// get term loop
+			done();
+		});
+
 	});
 });
 
@@ -564,7 +611,7 @@ function makeModel(){
 		.pipe(through.obj(t2,f2))
 		.pipe(through.obj(tend,fend))
 	model.pipe(through.obj(t3,f3)).pipe(through.obj(t4,f4)).pipe(through.obj(t5,f5))
-	model.pipe(through.obj(function(chunk,enc,cb){cb()},function(cb){cb()}))
+	model.pipe(through.obj(function(chunk,enc,cb){return cb()},function(cb){cb()}))
 	return model;
 }
 
@@ -636,6 +683,9 @@ function getReadable(){
 }
 function getWritable(){
 	return fs.createWriteStream('./copy.md',{encoding:"utf-8"})
+}
+function getPassthrogh(){
+	return through.obj(function(chunk,enc,cb){cb()},function(cb){cb()})
 }
 
 // test class

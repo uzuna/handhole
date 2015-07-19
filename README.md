@@ -5,7 +5,7 @@ __This is develop/maintenance tool for StreamAPI__
 
 ### Target
 
-Stream APIを使ったmodule開発をもっと簡単に。
+__Make it eacy to use StreamAPI : StreamAPIをもっと簡単に__
 
 データがどこを流れている、どう流れているかわかりにくい点、
 そしてデータを流し込んだり、パイプをつなぐ操作が煩雑なので、負荷を軽減をするために作りました。
@@ -20,6 +20,7 @@ __Use__
 var Handhole = require('handhole');
 
 var hh = Handhole(stream);
+var hh = HandHole([s1,s2]);
 ```
 
 ### Methods
@@ -28,9 +29,9 @@ var hh = Handhole(stream);
 
 |method|exsample|descript|
 |:---|:---|:---|
-|insert|`hh.insert(target, stream)`|指定したstreamの前に追加する|
+|insert|`hh.insert([target], stream or array)`|指定したstreamの前に追加する|
 |remove|`hh.remove(target)`|指定したstreamを取り除く|
-|pipe|`hh.pipe(target, stream)`|指定したstreamの後ろに追加|
+|pipe|`hh.pipe([target], stream or array)`|指定したstreamの後ろに追加|
 |unpipe|`hh.unpipe(target)`|指定したstreamの後ろを切り離す|
 |split|`hh.sprit(to,[from])`|指定したstreamから切り離す|
 
@@ -52,16 +53,89 @@ var hh = Handhole(stream);
 |garbage|`hh.garbage(target, [done])`|trash chunk data|
 |garbageAll|`hh.garbageAll(target, [done])`|set garbage to all EndTerm|
 
-## Method Detail
+
+
+## Information Methods
+
+Get stream information
+
+### list
+
+Return registered stream list
+
+```javascript
+var hh = HandHole([s1,s2]);
+var list = hh.list();
+console.log(list);
+// [
+// 	{
+// 		id:0,              // uniqueid
+// 		name:"s1",         // name(from transform function name)
+// 		obj:StreamObject,  // stream object
+// 		next:[1]           // list pipes id
+// 	},
+// 	...
+// ]
+```
+
+
+### viewlist
+
+Check stream list by looking
+
+```javascript
+var hh = HandHole([s1,s2]);
+var list = hh.viewlist();
+console.log(list);
+// [
+// 	{
+// 		id:0,       // unique id
+// 		name:"s1",  // name(from transform function name)
+// 		next:[1]    // list pipes id
+// 	},
+// 	{
+// 		id:1,
+// 		mame:"s2",
+// 		next:[]     // have not next pipe
+// 	}
+// ]
+```
+
+### term
+
+Get stream by termination type.
+
+```javascript
+var hh = HandHole([s1,s2]);
+
+// alone
+hh.Add(s3);
+
+// loop
+hh.Add([s4,s5]);
+hh.pipe("s5", "s4")
+
+var term = hh.term();
+console.log(term);
+// {
+// 	start:[...],	// start term.     ex.s1
+// 	end:[...],		// end term.       ex.s2
+// 	alone:[...],	// alone streams.  ex.s3
+// 	loop:[...],		// loop streams.   ex.[s4,s5]
+// 	other:[...],	// others
+// }
+```
+
+## Controll Methods
 
 ### Insert
 
 __targetの前に__streamを追加する
 
-`hh.insert([target], stream)`
+`hh.insert([target], stream or array)`
 
 ```javascript
-var t = stream;			// A-B-Cという順番でつながっていると仮定
+var t = [A,B,C];			// A-B-C 
 var hh = HandHole(t);
 
 // 指定なしなら先頭に追加
@@ -80,18 +154,18 @@ hh.insert(0, F);	// Error!!!
 
 __targetの後ろに__streamを追加する
 
-`hh.pipe([target], stream)`
+`hh.pipe([target], stream or array)`
 
 ```javascript
-var t = stream;			// A-B-Cという順番でつながっていると仮定
+var t = [A,B,C];			// A-B-C
 var hh = HandHole(t);
 
 // 指定なしなら最後尾に追加
 hh.pipe(D);				// A-B-C-D
 
 // 指定をすれば並列に接続
-hh.pipe("B",E)		// A-B-C-D
-									//   |-E
+hh.pipe("B",E)    // A-B-C-D
+                  //   |-E
 
 // writableの後には入れられない
 var r = fs.createWriteStream(filepath);
@@ -123,30 +197,30 @@ targetの下流を切り離す。
 `hh.unpipe(target)`
 
 ```javascript
-var t = stream;     // A-B-C-D-Eという順番でつながっていると仮定
+var t = [A,B,C,D,E];     // A-B-C-D-E
 var hh = HandHole(t);
 
 // 指定したstreamを取り除いて前後とつなげる
-hh.unpipe("C");       // A-B-C と　D-Eができる
+hh.unpipe("C");       // A-B-C, D-Eができる
 
 ```
 
 
 ### Split
 
-split stream pipe in front of "to".  
+split stream pipe by from-to 
 
 `hh.unpipe(to, [from])`
 
 ```javascript
-var t = stream;     // ex. it is piped A-B-C-D-E
+var t = [A,B,C,D,E];     // A-B-C-D-E
 var hh = HandHole(t);
 
 // split in front of target
-hh.split("C");       // A-B と C-D-Eができる
+hh.split("C");       // A-B, C-D-Eができる
 
 // get between "to" and "from"
-hh.split("B","D");
+hh.split("B","D");	// A-E, B-C-D
 
 ```
 
