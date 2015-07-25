@@ -167,6 +167,13 @@ hh.pipe(D);				// A-B-C-D
 hh.pipe("B",E)    // A-B-C-D
                   //   |-E
 
+// ループ構造は基本的には作れない
+hh.pipe("C","A")  // Error! stream loop is very slow
+
+// if want to use
+// hh._loopflag = true // _loopflag = true
+// hh.pipe("C","A") // OK
+
 // writableの後には入れられない
 var r = fs.createWriteStream(filepath);
 var hh = HandHole(r);

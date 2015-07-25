@@ -549,10 +549,18 @@ describe("handhole", function(){
 			assert.equal(t1.end.length,2)
 			assert.equal(t1.alone.length,1)
 
-			// looop 2 stream
+			// loop 2 stream
+			assert.throws(function(){
+				hh.pipe(1,0)
+			})
+
+			// force use
+			hh._loopflag = true;
 			hh.pipe(1,0)
 			
 			var pth = t1.alone[0];
+
+			
 			hh.pipe(pth.id,pth.id)
 			
 			var t2 = hh.term();
