@@ -13,7 +13,24 @@ var destfile = './copy.md';
 describe("handhole", function(){
 	var getDatatype = HandHole.util.getDatatype;
 
+	before(function(done){
+		fs.writeFile(destfile, "test", function(){
+			// console.log("saved");
+			done();
+		});
+	});
+
+	after(function(done){
+		setTimeout(function(){
+			fs.unlink(destfile, done);
+		}, 100);
+	});
+
+
 	describe("v0.0.1", function(){
+
+		
+
 		it("data type", function(){
 			assert.equal(getDatatype(new Buffer(1)),  'buffer')
 			assert.equal(getDatatype(1),              'number')
@@ -192,8 +209,14 @@ describe("handhole", function(){
 			hh.remove(0);
 			var hp = hh.hopper(1);
 			var fm = hh.flowMater(6);
+			var fm2 = hh.flowMater(6);
 
 			fm.on("flow", function(rs){
+				// console.log("flow",rs);
+				assert.equal(rs.count, 1)
+			})
+
+			fm2.on("flow", function(rs){
 				// console.log("flow",rs);
 				assert.equal(rs.count, 1)
 			})
@@ -229,7 +252,7 @@ describe("handhole", function(){
 			});
 
 			// Nhave not Open End term === return 0
-			assert.equal(hh.pipe(getReadable()),0)
+			// assert.equal(hh.pipe(getReadable()),0)
 			
 
 			// Aute pipe readableの終端にのみ反応
