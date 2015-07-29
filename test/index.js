@@ -29,8 +29,6 @@ describe("handhole", function(){
 
 	describe("v0.0.1", function(){
 
-		
-
 		it("data type", function(){
 			assert.equal(getDatatype(new Buffer(1)),  'buffer')
 			assert.equal(getDatatype(1),              'number')

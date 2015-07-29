@@ -374,3 +374,12 @@ var hh = handhole(stream);
 var cp = hh.capture("B");	// insert
 
 ```
+
+
+### util func
+
+Please read test/index.js
+
+```
+var getDatatype = HandHole.util.getDatatype;
+```
