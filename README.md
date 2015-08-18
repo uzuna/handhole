@@ -362,7 +362,10 @@ vl.on("flow", function (flow){
 
 ### Capture
 
-It is `console.log(data)`
+Data output.
+
+* default : console.log(chunk)
+* file : output to file(string/buffer/JSON)
 
 ```javascript
 
@@ -383,3 +386,7 @@ Please read test/index.js
 ```
 var getDatatype = HandHole.util.getDatatype;
 ```
+
+
+### Stacker
+

@@ -573,6 +573,44 @@ describe("handhole", function(){
 		});
 
 	});
+
+
+	describe("v0.0.5", function(){
+		it("stacker", function (done){
+			var hp = HandHole.hopper();
+			var fm = HandHole.flowMater();
+			var fm2 = HandHole.flowMater();
+			var cp = HandHole.capture({out:"file", filename:"capture.txt"});
+			var hh = HandHole([
+				hp,
+				fm,
+				HandHole.stacker(),
+				fm2,
+				cp
+			]);
+
+			fm.on("flow", function(flow){
+				// console.log("before",flow);
+				assert.equal(flow.count, 100);
+
+			})
+			fm2.on("flow", function(flow){
+				// console.log("after",flow);
+				assert.equal(flow.count, 1);
+			})
+
+			hh.garbageAll(function(){
+				fs.unlink("capture.txt")
+				done();
+			})
+
+			for(var i=0; i< 100; i++){
+				hp.push("D"+i);
+			}
+			hp.push(null)
+
+		})
+	})
 });
 
 function logprog(str){
