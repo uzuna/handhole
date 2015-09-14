@@ -27,7 +27,7 @@ describe("handhole", function(){
 	});
 
 
-	describe("v0.0.1", function(){
+	describe.skip("v0.0.1", function(){
 
 		it("data type", function(){
 			assert.equal(getDatatype(new Buffer(1)),  'buffer')
@@ -467,7 +467,7 @@ describe("handhole", function(){
 	})
 
 
-	describe("v0.0.2", function(){
+	describe.skip("v0.0.2", function(){
 		it("add", function(done){
 			var hh = HandHole(makeModel_line());
 			var v1 = hh.viewlist();
@@ -575,7 +575,7 @@ describe("handhole", function(){
 	});
 
 
-	describe("v0.0.5", function(){
+	describe.skip("v0.0.5", function(){
 		it("stacker", function (done){
 			var hp = HandHole.hopper();
 			var fm = HandHole.flowMater();
@@ -609,6 +609,45 @@ describe("handhole", function(){
 			}
 			hp.push(null)
 
+		})
+	})
+
+
+	describe("v0.0.6", function(){
+		it("conful", function (done){
+			var hp1 = HandHole.hopper();
+			var hp2 = HandHole.hopper();
+			var hp3 = HandHole.hopper();
+			var stc = HandHole.stacker();
+			var asrt = through.obj(confulAssert)
+			var cnf = HandHole.conful()
+			cnf.conful([hp1, hp2, hp3])
+			var hh = HandHole([cnf, stc, asrt]);
+			hh.garbageAll(function(result){
+				done();
+			})
+
+			//
+			// Test Data
+			//
+			hp1.push("A"+1);
+				
+			hp1.push(null)
+			for(var i=0; i< 10; i++){
+				hp2.push("D"+i);
+			}
+			
+			hp2.push(null)
+
+			setTimeout(function(){
+				hp3.data(["da3", null])
+			}, 1000);
+
+
+			function confulAssert (chunk, enc, cb) {
+				assert.ok(chunk.length, 12);
+				cb();
+			}
 		})
 	})
 });
