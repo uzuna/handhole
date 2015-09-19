@@ -390,3 +390,43 @@ var getDatatype = HandHole.util.getDatatype;
 
 ### Stacker
 
+データブロックサイズ変更。
+流れてきたデータを配列にためて出力する。
+
+* option.splitChar  
+	特定の文字列があったらstackした内容を書き出す。  
+	デフォルトは`","`
+
+```javascript
+
+// get Object from class
+var hp = handole.hopper();
+var st = handhole.stacker({splitChar:","})
+var hh = handhole([hp, st]);
+
+for(var i=0; i< 50; i++){
+	hp.push("D"+i);
+}
+// ["D0","D1"...]
+
+hp.push(",")	// split
+
+for(var i=0; i< 50; i++){
+	hp.push("C"+i);
+}
+// ["D0","D1"...] , ["C0","C1"...] 
+
+```
+
+### Conful
+
+複数のパイプから一つの処理パイプに流すための合流pipe  
+すべてのpipeがcloseしたらconfulも閉じる。
+
+```javascript
+var hp1 = HandHole.hopper();
+var hp2 = HandHole.hopper();
+var hp3 = HandHole.hopper();
+var cnf = HandHole.conful([hp1, hp2]); // initial set pipe
+cnf.conful(hp3);	// add pipe
+```

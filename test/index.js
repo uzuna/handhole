@@ -27,7 +27,7 @@ describe("handhole", function(){
 	});
 
 
-	describe.skip("v0.0.1", function(){
+	describe("v0.0.1", function(){
 
 		it("data type", function(){
 			assert.equal(getDatatype(new Buffer(1)),  'buffer')
@@ -467,7 +467,7 @@ describe("handhole", function(){
 	})
 
 
-	describe.skip("v0.0.2", function(){
+	describe("v0.0.2", function(){
 		it("add", function(done){
 			var hh = HandHole(makeModel_line());
 			var v1 = hh.viewlist();
@@ -575,7 +575,7 @@ describe("handhole", function(){
 	});
 
 
-	describe.skip("v0.0.5", function(){
+	describe("v0.0.5", function(){
 		it("stacker", function (done){
 			var hp = HandHole.hopper();
 			var fm = HandHole.flowMater();
@@ -614,14 +614,55 @@ describe("handhole", function(){
 
 
 	describe("v0.0.6", function(){
+		it("stacker", function (done) {
+			var splitChar = "/";
+			var hp = HandHole.hopper();
+			var fm = HandHole.flowMater();
+			var fm2 = HandHole.flowMater();
+			var cp = HandHole.capture({out:"file", filename:"capture.txt"});
+			var hh = HandHole([
+				hp,
+				fm,
+				HandHole.stacker({splitChar: splitChar}),
+				fm2,
+				cp
+			]);
+			
+			fm.on("flow", function(flow){
+				// console.log("before",flow);
+				assert.equal(flow.count, 101);
+
+			})
+			fm2.on("flow", function(flow){
+				// console.log("after",flow);
+				assert.equal(flow.count, 2);
+			})
+
+			hh.garbageAll(function(){
+				fs.unlink("capture.txt")
+				done();
+			})
+
+			for(var i=0; i< 50; i++){
+				hp.push("D"+i);
+			}
+			hp.push(splitChar);
+			for(var i=0; i< 50; i++){
+				hp.push("C"+i);
+			}
+			hp.push(null)
+
+
+		});
+
 		it("conful", function (done){
 			var hp1 = HandHole.hopper();
 			var hp2 = HandHole.hopper();
 			var hp3 = HandHole.hopper();
 			var stc = HandHole.stacker();
 			var asrt = through.obj(confulAssert)
-			var cnf = HandHole.conful()
-			cnf.conful([hp1, hp2, hp3])
+			var cnf = HandHole.conful([hp1, hp2]);
+			cnf.conful(hp3);
 			var hh = HandHole([cnf, stc, asrt]);
 			hh.garbageAll(function(result){
 				done();
