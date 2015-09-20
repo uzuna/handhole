@@ -27,7 +27,7 @@ describe("handhole", function(){
 	});
 
 
-	describe("v0.0.1", function(){
+	describe.skip("v0.0.1", function(){
 
 		it("data type", function(){
 			assert.equal(getDatatype(new Buffer(1)),  'buffer')
@@ -467,7 +467,7 @@ describe("handhole", function(){
 	})
 
 
-	describe("v0.0.2", function(){
+	describe.skip("v0.0.2", function(){
 		it("add", function(done){
 			var hh = HandHole(makeModel_line());
 			var v1 = hh.viewlist();
@@ -575,7 +575,7 @@ describe("handhole", function(){
 	});
 
 
-	describe("v0.0.5", function(){
+	describe.skip("v0.0.5", function(){
 		it("stacker", function (done){
 			var hp = HandHole.hopper();
 			var fm = HandHole.flowMater();
@@ -613,7 +613,7 @@ describe("handhole", function(){
 	})
 
 
-	describe("v0.0.6", function(){
+	describe.skip("v0.0.6", function(){
 		it("stacker", function (done) {
 			var splitChar = "/";
 			var hp = HandHole.hopper();
@@ -690,6 +690,38 @@ describe("handhole", function(){
 				cb();
 			}
 		})
+	})
+
+	describe("v0.0.7", function(){
+		it("turnstile", function (done) {
+			var hp = HandHole.hopper();
+			var tsl = HandHole.turnstile(ff);
+			var cp = HandHole.capture();
+			var hh = HandHole([hp, tsl, cp]);
+
+			hh.garbageAll(function(result){
+				done();
+			})
+
+
+			for(var i=0; i< 5; i++){
+				var v = Math.random() * 1500;
+				hp.push(v);
+			}
+			hp.push(null);
+
+			// function 
+			function ff(chunk, enc, cb){
+				// console.log(chunk);
+				var self = this;
+				setTimeout(function(){
+					self.push(chunk);
+					cb();
+				}, chunk);
+				
+			}
+
+		});
 	})
 });
 
