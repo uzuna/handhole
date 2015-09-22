@@ -27,7 +27,7 @@ describe("handhole", function(){
 	});
 
 
-	describe.skip("v0.0.1", function(){
+	describe("v0.0.1", function(){
 
 		it("data type", function(){
 			assert.equal(getDatatype(new Buffer(1)),  'buffer')
@@ -467,7 +467,7 @@ describe("handhole", function(){
 	})
 
 
-	describe.skip("v0.0.2", function(){
+	describe("v0.0.2", function(){
 		it("add", function(done){
 			var hh = HandHole(makeModel_line());
 			var v1 = hh.viewlist();
@@ -575,7 +575,7 @@ describe("handhole", function(){
 	});
 
 
-	describe.skip("v0.0.5", function(){
+	describe("v0.0.5", function(){
 		it("stacker", function (done){
 			var hp = HandHole.hopper();
 			var fm = HandHole.flowMater();
@@ -613,7 +613,7 @@ describe("handhole", function(){
 	})
 
 
-	describe.skip("v0.0.6", function(){
+	describe("v0.0.6", function(){
 		it("stacker", function (done) {
 			var splitChar = "/";
 			var hp = HandHole.hopper();
@@ -651,8 +651,6 @@ describe("handhole", function(){
 				hp.push("C"+i);
 			}
 			hp.push(null)
-
-
 		});
 
 		it("conful", function (done){
@@ -696,21 +694,22 @@ describe("handhole", function(){
 		it("turnstile", function (done) {
 			var hp = HandHole.hopper();
 			var tsl = HandHole.turnstile(ff);
-			var cp = HandHole.capture();
-			var hh = HandHole([hp, tsl, cp]);
+			// var cp = HandHole.capture();
+			var st = HandHole.stacker();
+			var as = through.obj(assertf)
+			var hh = HandHole([hp, tsl, st, as]);
 
 			hh.garbageAll(function(result){
 				done();
 			})
 
-
 			for(var i=0; i< 5; i++){
-				var v = Math.random() * 1500;
+				var v = Math.random() * 1000;
 				hp.push(v);
 			}
 			hp.push(null);
 
-			// function 
+			// test function 
 			function ff(chunk, enc, cb){
 				// console.log(chunk);
 				var self = this;
@@ -718,10 +717,66 @@ describe("handhole", function(){
 					self.push(chunk);
 					cb();
 				}, chunk);
-				
 			}
 
+			//
+			// assert function 
+			//
+			function assertf (chunk, enc, cb){
+				assert.equal(chunk.length, 5);
+				cb();
+			}
 		});
+
+		it("turnstile timeout", function (done) {
+			var opt = {
+				t: ff,
+				max: 4,
+				timeout: 800
+			}
+			var hp = HandHole.hopper();
+			var tsl = HandHole.turnstile(opt);
+			// var cp = HandHole.capture();
+			var as = through.obj(assertf)
+			var hh = HandHole([hp, tsl, as]);
+
+			var timeoutCount = 0;
+
+			tsl.on("timeout", function(chunk){
+				// console.log("timeout", chunk);
+				timeoutCount++;
+			})
+
+			hh.garbageAll(function(result){
+				assert.equal(timeoutCount, 5)
+				done();
+			})
+
+			for(var i=0; i< 5; i++){
+				var v = Math.random() * 1000 +2000;
+				hp.push(v);
+			}
+			hp.push(null);
+
+			// test function 
+			function ff(chunk, enc, cb){
+				var self = this;
+				setTimeout(function(){
+					self.push(chunk);
+					cb();
+				}, chunk);
+			}
+
+			//
+			// assert function 
+			//
+			function assertf (chunk, enc, cb){
+				assert.ok(false);
+				// console.log("run")
+				cb();
+			}
+		});
+
 	})
 });
 

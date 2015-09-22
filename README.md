@@ -430,3 +430,22 @@ var hp3 = HandHole.hopper();
 var cnf = HandHole.conful([hp1, hp2]); // initial set pipe
 cnf.conful(hp3);	// add pipe
 ```
+
+### turnstile
+
+改札機　並列実行+timeout制御をする
+
+```javascript
+
+var opt = {
+	t: ff,	// function _transform
+	max: 4,	// process max
+	timeout: 800	// timeout[ms]
+}
+var tsl = HandHole.turnstile(opt);
+
+tsl.on("timeout", function(chunk){
+	// timeout chunk
+})
+
+```
